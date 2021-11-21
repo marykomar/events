@@ -1,0 +1,38 @@
+### docker network create -d bridge --subnet 192.168.0.0/24 --gateway 192.168.0.1 development2
+
+version: '3.5'
+services:
+  mariadb:
+    image: mariadb:10.7
+    restart: always
+    container_name: "mariadb"
+    volumes:
+      - "./db:/var/lib/mariadb"
+    ports:
+      - 3307:3306
+    environment:
+      - MARIADB_ROOT_PASSWORD=root
+      - MARIADB_DATABASE=events
+      - MARIADB_USER=tempuser
+      - MARIADB_PASSWORD=temppassword
+  events:
+    build: .
+    links:
+      - mariadb
+    container_name: events
+    restart: on-failure
+    ports:
+      - "8080:8080"
+    environment:
+      - DB_PORT=3306
+      - DB_NAME=events
+      - DB_HOST=mariadb
+      - MARIADB_USER=tempuser
+      - MARIADB_PASSWORD=temppassword
+    depends_on:
+      - mariadb
+
+networks:
+  default:
+    external:
+      name: development
